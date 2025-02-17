@@ -9,6 +9,8 @@ toggles a global variable (e.g., "LED state"), then unlocks the mutex.
 Task B: Continuously reads that global variable (within a mutex lock) 
 and sets the LED accordingly.
 */
+
+
 #if CONFIG_FREERTOS_UNICORE
 static const BaseType_t app_cpu = 0;
 #else
