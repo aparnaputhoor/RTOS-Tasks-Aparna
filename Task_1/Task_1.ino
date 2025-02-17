@@ -1,3 +1,14 @@
+/*
+Create two tasks: one reads a push button (using a breadboard with a simple button and LED) 
+and updates a shared flag, while the other task blinks an LED based on that flag.
+Use a mutex to protect the shared flag variable.
+
+How It Works:
+Task A: Polls the push button. When pressed, it locks the mutex, 
+toggles a global variable (e.g., "LED state"), then unlocks the mutex.
+Task B: Continuously reads that global variable (within a mutex lock) 
+and sets the LED accordingly.
+*/
 #if CONFIG_FREERTOS_UNICORE
 static const BaseType_t app_cpu = 0;
 #else
