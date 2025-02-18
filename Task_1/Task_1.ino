@@ -30,6 +30,7 @@ void toggleLED(void *parameter) {
     } else {
       digitalWrite(led_pin, LOW);                 //if state is low led is off
     }
+     vTaskDelay(50/ portTICK_PERIOD_MS); 
   }
 }
 
