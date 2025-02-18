@@ -59,7 +59,7 @@ void DHTTask(void *parameter) {
     data.DHT11temperature = DHT11_Sensor.readTemperature();
 
     xSemaphoreGive(mutex);                  //give mutex
-    vTaskDelay(500 / portTICK_PERIOD_MS);  // Delay for 2 seconds before reading again
+    vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 2 seconds before reading again
   }
 }
 
