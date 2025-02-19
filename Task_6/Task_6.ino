@@ -10,7 +10,6 @@ static SemaphoreHandle_t xSemaphore;
 
 void Task_A(void *parameter) {
   while (1) {
-    Serial.println("Task A is running...");
     if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {                       //task A to give semaphore
       Serial.println("Task A is takes the semaphore");
       if (global_var) {
@@ -18,21 +17,24 @@ void Task_A(void *parameter) {
         Serial.print("global variable is made ");
         Serial.println(global_var);
       }
-      vTaskDelay(200 / portTICK_PERIOD_MS);
+      vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
   }
 }
 
 void Task_B(void *parameter) {
   while (1) {
-    Serial.println("Task B is running...");
+
+   if (xSemaphoreTake(xSemaphore, 0));
+    else
+    {
        global_var = 1;
     Serial.print("global variable is made ");
     Serial.println(global_var);
 Serial.println("Task B is done. Giving semaphore to Task A.");
     xSemaphoreGive(xSemaphore);                                                  //Task B to give semaphore
-     
-    vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
