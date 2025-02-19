@@ -37,7 +37,7 @@ void toggleLED(void *parameter) {
 }
 
 void buttonISR( ) {
-      xSemaphoreGive(binarySemaphore);
+      xSemaphoreGiveFromISR(binarySemaphore,NULL);
       led_state = !led_state;                       //toggle the state 
   }
 
