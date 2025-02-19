@@ -21,7 +21,7 @@ static const BaseType_t app_cpu = 0;
 static const BaseType_t app_cpu = 1;
 #endif
 
-static const int led_pin = 4;
+static const int led_pin = 2;
 static const int ldr_pin = 34;
 
 static SemaphoreHandle_t mutex;
@@ -29,18 +29,22 @@ static int ldr_state = 0;
 
 void LEDControl(void *parameter) {
   while (1) {
-    //analogWrite(led_pin, ldr_state);
-    ledcWrite(led_pin, ldr_state);                               //pwm to pin 4
+    if (xSemaphoreTake(mutex, portMAX_DELAY)) {
+      //analogWrite(led_pin, ldr_state);
+      ledcWrite(led_pin, ldr_state);  //pwm to pin 4
+      xSemaphoreGive(mutex);
+    }
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 
 void readLDR(void *parameter) {
   while (1) {
-    xSemaphoreTake(mutex, portMAX_DELAY);  //take mutex
-    ldr_state = analogRead(ldr_pin) >> 4;  //analog value from ldr sensor
-    Serial.println(ldr_state);
-    xSemaphoreGive(mutex);                 //give mutex
+    if (xSemaphoreTake(mutex, portMAX_DELAY)) {  //take mutex
+      ldr_state = analogRead(ldr_pin) >> 4;      //analog value from ldr sensor
+      Serial.println(ldr_state);
+      xSemaphoreGive(mutex);  //give mutex
+    }
     vTaskDelay(100 / portTICK_PERIOD_MS);  //delay
   }
 }
@@ -53,7 +57,7 @@ void setup() {
   pinMode(led_pin, OUTPUT);
   pinMode(ldr_pin, INPUT);
 
- ledcAttach(led_pin, 5000, 10);  // Set PWM frequency and resolution     
+  ledcAttach(led_pin, 5000, 10);  // Set PWM frequency and resolution
 
   mutex = xSemaphoreCreateMutex();  //created the semaphore
 
