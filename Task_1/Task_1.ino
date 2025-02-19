@@ -25,23 +25,33 @@ static int led_state = 0;
 
 void toggleLED(void *parameter) {
   while (1) {
-    if (led_state) {                              //if state is high
-      digitalWrite(led_pin, HIGH);                //led on
-    } else {
-      digitalWrite(led_pin, LOW);                 //if state is low led is off
+    if (xSemaphoreTake(mutex, portMAX_DELAY)) {
+      Serial.println("toggleled took semaphore");
+
+      if (led_state) {                //if state is high
+        digitalWrite(led_pin, HIGH);  //led on
+      } else {
+        digitalWrite(led_pin, LOW);  //if state is low led is off
+      }
+      xSemaphoreGive(mutex);
+      Serial.println("toggleled give semaphore");
     }
-     vTaskDelay(50/ portTICK_PERIOD_MS); 
+    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 
 void Pushbutton(void *parameter) {
   while (1) {
 
-    if (digitalRead(button_pin)) {                  //if button is pressed
-       xSemaphoreTake(mutex, portMAX_DELAY);        //take mutex
-      led_state = !led_state;                       //toggle the state
-       xSemaphoreGive(mutex);                       //give mutex
-    vTaskDelay(200/ portTICK_PERIOD_MS);            //for button debouncing
+    if (digitalRead(button_pin)) {                 //if button is pressed
+      if (xSemaphoreTake(mutex, portMAX_DELAY)) {  //take mutex
+        Serial.println("pushbutton took semaphore");
+
+        led_state = !led_state;  //toggle the state
+        xSemaphoreGive(mutex);   //give mutex
+        Serial.println("pushbutton give semaphore");
+      }
+      vTaskDelay(200 / portTICK_PERIOD_MS);  //for button debouncing
     }
   }
 }
@@ -54,7 +64,7 @@ void setup() {
   pinMode(led_pin, OUTPUT);
   pinMode(button_pin, INPUT);
 
-  mutex = xSemaphoreCreateMutex();        //created the semaphore
+  mutex = xSemaphoreCreateMutex();  //created the semaphore
 
 
   xTaskCreatePinnedToCore(
@@ -71,7 +81,7 @@ void setup() {
     "Push Button",
     1024,
     NULL,
-    2,
+    1,
     NULL,
     app_cpu);
   // put your setup code here, to run once:
