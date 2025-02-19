@@ -53,13 +53,14 @@ DHT DHT11_Sensor(DHT11_PIN, DHTTYPE);
 void DHTTask(void *parameter) {
   while (1) {
 
-    xSemaphoreTake(mutex, portMAX_DELAY);  //take mutex
-
+    if(xSemaphoreTake(mutex, portMAX_DELAY)) //take mutex
+    {
     data.DHT11humidity = DHT11_Sensor.readHumidity();
     data.DHT11temperature = DHT11_Sensor.readTemperature();
 
     xSemaphoreGive(mutex);                  //give mutex
-    vTaskDelay(1000 / portTICK_PERIOD_MS);  // Delay for 2 seconds before reading again
+    }
+    vTaskDelay(500 / portTICK_PERIOD_MS);  // Delay for 2 seconds before reading again
   }
 }
 
@@ -67,8 +68,8 @@ void DHTTask(void *parameter) {
 void PrintTask(void *parameter) {
   while (1) {
 
-    xSemaphoreTake(mutex, portMAX_DELAY);  //take mutex
-
+    if(xSemaphoreTake(mutex, portMAX_DELAY))  //take mutex
+{
     Serial.print("Humidity: ");
     Serial.print(data.DHT11humidity);
     Serial.println(" % , ");
@@ -85,7 +86,7 @@ void PrintTask(void *parameter) {
     Serial.println(data.IR_presence ? "Not Detected" : "Detected");
 
     xSemaphoreGive(mutex);  //give mutex
-
+}
     vTaskDelay(1000 / portTICK_PERIOD_MS);  //for button debouncing
   }
 }
@@ -93,8 +94,8 @@ void PrintTask(void *parameter) {
 
 void UltrasonicTask(void *parameter) {
   while (1) {
-    xSemaphoreTake(mutex, portMAX_DELAY);  //take mutex
-
+    if(xSemaphoreTake(mutex, portMAX_DELAY))  //take mutex
+{
     digitalWrite(TRIG_PIN, LOW);   // Ensure the trigger pin is LOW to start
     delayMicroseconds(2);          // Wait for 2 microseconds
     digitalWrite(TRIG_PIN, HIGH);  // Set Trigger pin HIGH to send the pulse
@@ -107,15 +108,18 @@ void UltrasonicTask(void *parameter) {
     // Calculate the distance in centimeters (speed of sound: 343 meters per second)
     data.Ultrasonic_len = data.Ultrasonic_duratn * 0.0344 / 2;  // Divide by 2 because pulse travels to the object and back
     xSemaphoreGive(mutex);                                      //give mutex
+}
     vTaskDelay(500 / portTICK_PERIOD_MS);                       // Delay for 0.5 seconds before checking again
   }
 }
 
 void IRTask(void *parameter) {
   while (1) {
-    xSemaphoreTake(mutex, portMAX_DELAY);  // Take mutex
+    if(xSemaphoreTake(mutex, portMAX_DELAY))  // Take mutex
+    {
     data.IR_presence = digitalRead(IR_PIN); //read the presence
     xSemaphoreGive(mutex);                 // Release mutex
+    }
     vTaskDelay(500 / portTICK_PERIOD_MS);  // Delay for 0.5 seconds before checking again
   }
 }
@@ -134,10 +138,10 @@ void setup() {
   mutex = xSemaphoreCreateMutex();  //created the semaphore
 
 
-  xTaskCreatePinnedToCore(DHTTask,"DHT11 Task",2048,NULL,2,NULL,app_cpu);
+  xTaskCreatePinnedToCore(DHTTask,"DHT11 Task",2048,NULL,1,NULL,app_cpu);
   xTaskCreatePinnedToCore(PrintTask,"Print the data",1024,NULL,1,NULL,app_cpu);
-  xTaskCreatePinnedToCore(UltrasonicTask,"Ultrasonic Task",2048,NULL,2,NULL,app_cpu);
-  xTaskCreatePinnedToCore(IRTask,"IR Task",1024,NULL,2,NULL,app_cpu);
+  xTaskCreatePinnedToCore(UltrasonicTask,"Ultrasonic Task",2048,NULL,1,NULL,app_cpu);
+  xTaskCreatePinnedToCore(IRTask,"IR Task",1024,NULL,1,NULL,app_cpu);
 
   vTaskDelete(NULL);
 
